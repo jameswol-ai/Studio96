@@ -7,13 +7,23 @@ import streamlit as st
 import numpy as np
 import time
 import random
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D   # <-- required for 3D projections
 import sys
 import os
 
 # =========================================================
-# SAFE PATH SETUP (handles missing external modules)
+# SAFE MATPLOTLIB IMPORT (optional for server environments)
+# =========================================================
+try:
+    import matplotlib
+    matplotlib.use("Agg")  # non-interactive backend
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
+
+# =========================================================
+# PATH SETUP
 # =========================================================
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -22,7 +32,7 @@ try:
     from core.registry import run_pipeline
     load_pipelines()
 except ImportError:
-    # Dummy implementations so the app runs without external dependencies
+    # Dummy implementations for standalone use
     def load_pipelines():
         pass
     def run_pipeline(*args, **kwargs):
@@ -33,13 +43,10 @@ except ImportError:
 # =========================================================
 if "result" not in st.session_state:
     st.session_state.result = None
-
 if "intent_text" not in st.session_state:
     st.session_state.intent_text = ""
-
 if "site_area" not in st.session_state:
     st.session_state.site_area = 1000.0
-
 if "civil_history" not in st.session_state:
     st.session_state.civil_history = []
 
@@ -50,13 +57,11 @@ class CityPolicy:
     def __init__(self):
         self.risk_map = {}
         self.lr = 0.2
-
     def choose_location(self):
         x, y = random.randint(0, 25), random.randint(0, 25)
         if self.risk_map.get((x, y), 0) > 2:
             return self.choose_location()
         return x, y
-
     def update(self, failed_nodes):
         for n in failed_nodes:
             x, y, z = n
@@ -68,8 +73,7 @@ class RLBuildingEngine:
         for _ in range(5):
             x, y = policy.choose_location()
             buildings.append({
-                "x": x,
-                "y": y,
+                "x": x, "y": y,
                 "floors": random.randint(3, 10),
                 "grid": random.choice([6, 8, 10, 12])
             })
@@ -84,7 +88,6 @@ class RLPhysics:
                     for y in range(0, b["grid"], 2):
                         nodes.append((x + b["x"], y + b["y"], z))
         return nodes
-
     def loads(self, nodes):
         load = {n: 0.0 for n in nodes}
         max_z = max(n[2] for n in nodes)
@@ -97,7 +100,6 @@ class RLPhysics:
                 if below in load:
                     load[below] += l * 0.7
         return load
-
     def collapse(self, load):
         return {n for n, l in load.items() if l > 2.0}
 
@@ -107,7 +109,6 @@ class RLCityEngine:
         self.builder = RLBuildingEngine()
         self.physics = RLPhysics()
         self.history = []
-
     def step(self):
         buildings = self.builder.generate(self.policy)
         nodes = self.physics.build_nodes(buildings)
@@ -146,8 +147,6 @@ mode = st.sidebar.selectbox(
         "Cost Engine",
         "Rendering",
         "Full Pipeline Simulation",
-
-        # 🧠 CIVILIZATION LAYERS
         "🏙️ RL City",
         "🌆 City Learning",
         "🤝 Diplomacy Network",
@@ -164,18 +163,15 @@ mode = st.sidebar.selectbox(
 if mode == "AI Brain":
     st.header("🧠 Design Brain")
     st.session_state.intent_text = st.text_area(
-        "Describe building intent",
-        value=st.session_state.intent_text
+        "Describe building intent", value=st.session_state.intent_text
     )
     st.session_state.site_area = st.number_input(
-        "Site Area (m²)",
-        value=st.session_state.site_area
+        "Site Area (m²)", value=st.session_state.site_area
     )
     if st.button("RUN FULL GENERATION"):
         try:
             st.session_state.result = run_pipeline(
-                st.session_state.intent_text,
-                st.session_state.site_area
+                st.session_state.intent_text, st.session_state.site_area
             )
             st.success("Pipeline executed successfully")
         except Exception as e:
@@ -211,11 +207,18 @@ elif mode == "MEP Systems":
 # =========================================================
 elif mode == "GIS & Site":
     st.header("Terrain Analysis")
-    x = np.linspace(0, 10, 100)
-    y = np.sin(x)
-    fig, ax = plt.subplots()
-    ax.plot(x, y)
-    st.pyplot(fig)
+    if MATPLOTLIB_AVAILABLE:
+        x = np.linspace(0, 10, 100)
+        y = np.sin(x)
+        fig, ax = plt.subplots()
+        ax.plot(x, y)
+        st.pyplot(fig)
+    else:
+        # Fallback to native Streamlit line chart
+        x = np.linspace(0, 10, 100)
+        y = np.sin(x)
+        chart_data = np.column_stack((x, y))
+        st.line_chart(chart_data, x=0, y=1)
 
 # =========================================================
 # 💰 COST
@@ -226,18 +229,22 @@ elif mode == "Cost Engine":
     st.metric("Cost", f"${area * random.randint(400, 1200):,.0f}")
 
 # =========================================================
-# 🧊 RENDERING (now with working 3D)
+# 🧊 RENDERING
 # =========================================================
 elif mode == "Rendering":
     st.header("3D Massing")
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection="3d")
-    ax.scatter(
-        np.random.rand(50),
-        np.random.rand(50),
-        np.random.rand(50)
-    )
-    st.pyplot(fig)
+    if MATPLOTLIB_AVAILABLE:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection="3d")
+        ax.scatter(
+            np.random.rand(50),
+            np.random.rand(50),
+            np.random.rand(50)
+        )
+        st.pyplot(fig)
+    else:
+        st.warning("Matplotlib is not installed. Cannot render 3D plot.")
+        st.info("Install matplotlib and mpl_toolkits to enable 3D rendering.")
 
 # =========================================================
 # 🚀 FULL PIPELINE
@@ -271,12 +278,12 @@ elif mode == "🏙️ RL City":
 elif mode == "🌆 City Learning":
     st.header("Learning Curve")
     if rl_engine.history:
-        st.line_chart(rl_engine.history)
+        st.line_chart(rl_engine.history)  # Streamlit native, no matplotlib needed
     else:
         st.info("Run RL City first")
 
 # =========================================================
-# 🤝 DIPLOMACY NETWORK (placeholder)
+# 🤝 DIPLOMACY NETWORK
 # =========================================================
 elif mode == "🤝 Diplomacy Network":
     st.header("🤝 Diplomacy Network")
@@ -284,18 +291,22 @@ elif mode == "🤝 Diplomacy Network":
     np.random.seed(42)
     nations = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"]
     matrix = np.random.rand(len(nations), len(nations))
-    fig, ax = plt.subplots()
-    cax = ax.matshow(matrix, cmap="coolwarm", vmin=-1, vmax=1)
-    fig.colorbar(cax)
-    ax.set_xticks(range(len(nations)))
-    ax.set_yticks(range(len(nations)))
-    ax.set_xticklabels(nations)
-    ax.set_yticklabels(nations)
-    st.pyplot(fig)
-    st.caption("Symmetry: better relations = positive, tension = negative.")
+    if MATPLOTLIB_AVAILABLE:
+        fig, ax = plt.subplots()
+        cax = ax.matshow(matrix, cmap="coolwarm", vmin=0, vmax=1)
+        fig.colorbar(cax)
+        ax.set_xticks(range(len(nations)))
+        ax.set_yticks(range(len(nations)))
+        ax.set_xticklabels(nations)
+        ax.set_yticklabels(nations)
+        st.pyplot(fig)
+    else:
+        # Simple text matrix
+        st.dataframe(matrix, columns=nations, index=nations)
+        st.caption("(Matplotlib missing – showing raw data)")
 
 # =========================================================
-# ⚔️ WAR SYSTEM (placeholder)
+# ⚔️ WAR SYSTEM
 # =========================================================
 elif mode == "⚔️ War System":
     st.header("⚔️ War System")
@@ -311,18 +322,15 @@ elif mode == "⚔️ War System":
         st.info("Full military/economic model to be linked with RL city stability.")
 
 # =========================================================
-# 🎭 CULTURE SYSTEM (placeholder)
+# 🎭 CULTURE SYSTEM
 # =========================================================
 elif mode == "🎭 Culture System":
     st.header("🎭 Culture System")
     st.write("**Memetic spread & cultural influence**")
-    # Simple bar chart of cultural influence
     cities = ["City A", "City B", "City C", "City D"]
     influence = np.random.rand(4)
-    fig, ax = plt.subplots()
-    ax.bar(cities, influence, color="purple")
-    ax.set_ylabel("Cultural Influence")
-    st.pyplot(fig)
+    # Streamlit bar chart
+    st.bar_chart(dict(zip(cities, influence)))
     st.caption("Culture propagates through trade, art, and AI-generated memes.")
 
 # =========================================================
