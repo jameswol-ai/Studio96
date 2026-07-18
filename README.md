@@ -1,2 +1,2 @@
-# Studio-96
+# Studio 96
 Architecture Design Studio 
