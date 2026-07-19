@@ -1,8 +1,4 @@
 # =========================================================
-# 🏗️ RANDOM AI — UNIFIED CIVILIZATION SIMULATOR
-# RL Cities + Culture + Diplomacy + War + Consciousness
-# =========================================================
-
 import streamlit as st
 import numpy as np
 import time
@@ -10,17 +6,22 @@ import random
 import sys
 import os
 
-# =========================================================
-# SAFE MATPLOTLIB IMPORT (optional for server environments)
-# =========================================================
+# ---- SAFE MATPLOTLIB IMPORT (will not crash if matplotlib is missing) ----
 try:
     import matplotlib
-    matplotlib.use("Agg")  # non-interactive backend
+    matplotlib.use("Agg")   # non-interactive backend for server environments
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
+# ---------------------------------------------------------------------
+
+if MATPLOTLIB_AVAILABLE:
+    # matplotlib code
+else:
+    st.warning("Matplotlib is not installed. Showing simple alternative.")
+    # fallback (e.g., st.line_chart, st.bar_chart, or text)
 
 # =========================================================
 # PATH SETUP
