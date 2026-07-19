@@ -5,16 +5,6 @@ import random
 import sys
 import os
 
-# ---- SAFE MATPLOTLIB (prevents crash if not installed) ----
-try:
-    import matplotlib
-    matplotlib.use("Agg")   # Non-interactive backend
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
-    MATPLOTLIB_AVAILABLE = True
-except ImportError:
-    MATPLOTLIB_AVAILABLE = False
-
 # ---- DUMMY CORE MODULES (optional) ----
 try:
     from core.loader import load_pipelines
