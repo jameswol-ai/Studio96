@@ -101,94 +101,128 @@ rl_engine = RLCityEngine()
 st.set_page_config(page_title="Studio 96", layout="wide")
 st.title("🏗️ Studio 96 — Unified Simulator")
 
-# ---- TABS (replaces sidebar) ----
-tabs = st.tabs([
-    "AI Brain",
-    "Architecture",
-    "Structure",
-    "MEP",
-    "GIS & Site",
-    "Cost Engine",
-    "Rendering",
-    "Simulation",
-    "RL City",
-    "City Learning",
-    "Diplomacy",
-    "War System",
-    "Culture",
-    "Consciousness",
-    "Meta-Evolution"
-])
+# ---- TABS (simplified & reordered) ----
+tab_labels = [
+    "🧠 AI Brain",
+    "🏛️ Architecture",
+    "🏗️ Structure",
+    "⚡ MEP",
+    "🌍 GIS & Site",
+    "💰 Cost",
+    "🎨 Render",
+    "🚀 Full Sim",
+    "🏙️ RL City",
+    "📈 City Learning",
+    "🤝 Diplomacy",
+    "⚔️ War",
+    "🎭 Culture",
+    "🌌 Consciousness",
+    "🧬 Meta‑Evo"
+]
+tabs = st.tabs(tab_labels)
 
 # =========================================================
 # TAB 0: AI BRAIN
 # =========================================================
 with tabs[0]:
-    st.header("🧠 Design Brain")
-    st.session_state.intent_text = st.text_area(
-        "Describe building intent",
-        value=st.session_state.intent_text
-    )
-    st.session_state.site_area = st.number_input(
-        "Site Area (m²)",
-        value=st.session_state.site_area
-    )
-    if st.button("Generate Concept"):
-        st.success(f"Concept generated for: '{st.session_state.intent_text}' ({st.session_state.site_area} m²)")
+    st.header("🧠 AI Design Brain")
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.session_state.intent_text = st.text_area(
+            "Describe your building intent",
+            value=st.session_state.intent_text,
+            height=100,
+            placeholder="e.g., A 5-storey mixed-use building with courtyard..."
+        )
+    with col2:
+        st.session_state.site_area = st.number_input(
+            "Site area (m²)",
+            value=st.session_state.site_area,
+            min_value=100.0
+        )
+        if st.button("Generate Concept", use_container_width=True):
+            st.success(f"Concept generated for '{st.session_state.intent_text[:30]}...' ({st.session_state.site_area} m²)")
 
 # =========================================================
-# TAB 1: ARCHITECTURE
+# TAB 1: ARCHITECTURE (with gridlines)
 # =========================================================
 with tabs[1]:
     st.header("🏛️ Architecture Engine")
-    floors = st.slider("Floors", 1, 50, 5)
-    if st.button("Generate Floor Plan"):
-        st.write([f"Floor {i}" for i in range(floors)])
+    st.subheader("Floor Plan Grid")
+    col1, col2 = st.columns(2)
+    with col1:
+        grid_spacing = st.slider("Grid spacing (m)", 2.0, 10.0, 6.0)
+    with col2:
+        grid_extent = st.slider("Grid size (m)", 10, 60, 30)
+    if st.button("Show Gridlines"):
+        if MATPLOTLIB_AVAILABLE:
+            fig, ax = plt.subplots()
+            ax.set_aspect('equal')
+            ax.set_xlim(0, grid_extent)
+            ax.set_ylim(0, grid_extent)
+            ax.set_xticks(np.arange(0, grid_extent + grid_spacing, grid_spacing))
+            ax.set_yticks(np.arange(0, grid_extent + grid_spacing, grid_spacing))
+            ax.grid(True, linestyle='--', alpha=0.7)
+            ax.set_xlabel("X (m)")
+            ax.set_ylabel("Y (m)")
+            ax.set_title("Architectural Grid")
+            st.pyplot(fig)
+        else:
+            st.info("Matplotlib not installed – showing numerical grid")
+            rows = int(grid_extent / grid_spacing)
+            grid_data = [[f"({i*grid_spacing:.0f},{j*grid_spacing:.0f})" for j in range(rows)] for i in range(rows)]
+            st.table(grid_data[:10])  # limit rows for readability
 
 # =========================================================
-# TAB 2: STRUCTURE
+# TAB 2: STRUCTURE (element types)
 # =========================================================
 with tabs[2]:
-    st.header("🏗️ Structural Check")
-    st.info("Eurocode engine placeholder (external module)")
-    if st.button("Run Analysis"):
-        st.metric("Capacity Ratio", f"{random.uniform(0.4, 0.95):.2f}")
+    st.header("🏗️ Structural Engine")
+    st.subheader("Typical Structural Elements")
+    elements = {
+        "Columns": "Vertical load‑bearing members (concrete/steel)",
+        "Beams": "Horizontal members spanning between columns",
+        "Slabs": "Floor/roof plates (one‑way or two‑way)",
+        "Foundation": "Spread footings, piles, or raft",
+        "Shear Walls": "Lateral stability cores"
+    }
+    st.table(elements.items())
+    st.subheader("Conceptual Section")
+    if st.button("Generate Section View"):
+        if MATPLOTLIB_AVAILABLE:
+            fig, ax = plt.subplots()
+            ax.bar(["Footing", "Column", "Beam", "Slab"], [2, 5, 3, 0.3], color=["brown", "gray", "orange", "lightblue"])
+            ax.set_ylabel("Typical depth (m)")
+            ax.set_title("Structural Depth Profile")
+            st.pyplot(fig)
+        else:
+            st.bar_chart({"Footing": 2, "Column": 5, "Beam": 3, "Slab": 0.3})
 
 # =========================================================
-# TAB 3: MEP (Mechanical, Electrical, Plumbing)
+# TAB 3: MEP
 # =========================================================
 with tabs[3]:
     st.header("⚡ MEP Systems")
-    mep_tab1, mep_tab2, mep_tab3 = st.tabs(["Mechanical", "Electrical", "Plumbing"])
-
+    mep_tab1, mep_tab2, mep_tab3 = st.tabs(["❄️ Mechanical", "💡 Electrical", "🚿 Plumbing"])
     with mep_tab1:
-        st.subheader("❄️ Mechanical (HVAC)")
         st.metric("Cooling Load", f"{random.randint(80, 250)} kW")
         st.metric("Heating Load", f"{random.randint(50, 200)} kW")
         st.metric("Airflow", f"{random.randint(2000, 8000)} m³/h")
-        # Simple duct sizing
-        st.write("Duct Size Suggestion")
-        width = st.slider("Duct Width (cm)", 20, 100, 40)
-        height = st.slider("Duct Height (cm)", 10, 50, 20)
-        st.write(f"Cross-sectional area: {width * height} cm²")
-
+        st.write("Duct Sizing")
+        w = st.slider("Duct Width (cm)", 20, 100, 40, key="mw")
+        h = st.slider("Duct Height (cm)", 10, 50, 20, key="mh")
+        st.write(f"Area: {w*h} cm²")
     with mep_tab2:
-        st.subheader("💡 Electrical")
-        col1, col2 = st.columns(2)
-        col1.metric("Total Connected Load", f"{random.randint(50, 500)} kVA")
-        col2.metric("Lighting Power Density", f"{random.uniform(8, 15):.1f} W/m²")
-        st.write("Circuit Schedule")
-        circuits = {"Lights": "3x16A", "Sockets": "6x20A", "HVAC": "2x32A", "Elevator": "1x63A"}
-        st.json(circuits)
-
+        col_a, col_b = st.columns(2)
+        col_a.metric("Total Load", f"{random.randint(50, 500)} kVA")
+        col_b.metric("LPD", f"{random.uniform(8, 15):.1f} W/m²")
+        st.json({"Lights":"3x16A","Sockets":"6x20A","HVAC":"2x32A","Elevator":"1x63A"})
     with mep_tab3:
-        st.subheader("🚿 Plumbing")
-        st.metric("Daily Water Demand", f"{random.randint(1000, 5000)} L")
+        st.metric("Daily Water", f"{random.randint(1000, 5000)} L")
         st.metric("Sewage Flow", f"{random.randint(800, 4000)} L/day")
-        st.write("Pipe Sizing")
-        pipe_type = st.selectbox("Pipe Material", ["Copper", "PVC", "PEX"])
-        diameter = st.slider("Diameter (mm)", 15, 100, 25)
-        st.write(f"Selected: {pipe_type} pipe, Ø{diameter}mm")
+        pipe = st.selectbox("Material", ["Copper","PVC","PEX"])
+        diam = st.slider("Diameter (mm)", 15, 100, 25, key="pd")
+        st.write(f"{pipe} Ø{diam}mm")
 
 # =========================================================
 # TAB 4: GIS & SITE
@@ -204,7 +238,7 @@ with tabs[4]:
         st.line_chart(np.column_stack([np.linspace(0, 10, 100), np.sin(np.linspace(0, 10, 100))]))
 
 # =========================================================
-# TAB 5: COST ENGINE
+# TAB 5: COST
 # =========================================================
 with tabs[5]:
     st.header("💰 Cost Engine")
@@ -213,36 +247,37 @@ with tabs[5]:
     st.bar_chart({"Foundation": 15, "Structure": 30, "MEP": 25, "Finishes": 20, "Other": 10})
 
 # =========================================================
-# TAB 6: RENDERING
+# TAB 6: RENDER
 # =========================================================
 with tabs[6]:
-    st.header("3D Massing")
+    st.header("🎨 3D Massing")
     if MATPLOTLIB_AVAILABLE:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
         ax.scatter(*[np.random.rand(50) for _ in range(3)])
         st.pyplot(fig)
     else:
-        st.warning("Matplotlib not installed – 3D rendering disabled.")
+        st.warning("Matplotlib not installed – 3D disabled")
 
 # =========================================================
-# TAB 7: FULL SIMULATION (pipeline)
+# TAB 7: FULL SIMULATION
 # =========================================================
 with tabs[7]:
-    st.header("System Simulation")
-    steps = ["AI Concept", "Architecture", "Structure", "MEP", "Cost", "Render", "Export"]
-    p = st.progress(0)
-    for i, s in enumerate(steps):
-        st.write(s)
-        time.sleep(0.2)
-        p.progress((i + 1) / len(steps))
-    st.success("Complete")
+    st.header("🚀 Full Simulation")
+    if st.button("Run All Modules"):
+        steps = ["AI","Architecture","Structure","MEP","Cost","Render","Export"]
+        p = st.progress(0)
+        for i, s in enumerate(steps):
+            st.write(s)
+            time.sleep(0.2)
+            p.progress((i+1)/len(steps))
+        st.success("Simulation complete")
 
 # =========================================================
 # TAB 8: RL CITY
 # =========================================================
 with tabs[8]:
-    st.header("🏙️ Reinforcement Learning City")
+    st.header("🏙️ RL City")
     if st.button("Run City Step"):
         buildings, _, _, failed, stability, reward = rl_engine.step()
         c1, c2, c3 = st.columns(3)
@@ -255,7 +290,7 @@ with tabs[8]:
 # TAB 9: CITY LEARNING
 # =========================================================
 with tabs[9]:
-    st.header("Learning Curve")
+    st.header("📈 Learning Curve")
     if rl_engine.history:
         st.line_chart(rl_engine.history)
     else:
@@ -266,7 +301,7 @@ with tabs[9]:
 # =========================================================
 with tabs[10]:
     st.header("🤝 Diplomacy Network")
-    nations = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"]
+    nations = ["Alpha","Beta","Gamma","Delta","Epsilon"]
     matrix = np.random.rand(len(nations), len(nations))
     if MATPLOTLIB_AVAILABLE:
         fig, ax = plt.subplots()
@@ -281,31 +316,29 @@ with tabs[10]:
         st.dataframe(matrix, columns=nations)
 
 # =========================================================
-# TAB 11: WAR SYSTEM
+# TAB 11: WAR
 # =========================================================
 with tabs[11]:
     st.header("⚔️ War System")
-    col1, col2 = st.columns(2)
-    with col1:
-        attacker = st.selectbox("Attacker", ["Alpha", "Beta", "Gamma"])
-    with col2:
-        defender = st.selectbox("Defender", ["Beta", "Gamma", "Delta"])
+    c1, c2 = st.columns(2)
+    with c1: attacker = st.selectbox("Attacker", ["Alpha","Beta","Gamma"])
+    with c2: defender = st.selectbox("Defender", ["Beta","Gamma","Delta"])
     if st.button("Simulate Battle"):
-        st.metric("Outcome", random.choice(["Victory", "Stalemate", "Defeat"]))
+        st.metric("Outcome", random.choice(["Victory","Stalemate","Defeat"]))
 
 # =========================================================
-# TAB 12: CULTURE SYSTEM
+# TAB 12: CULTURE
 # =========================================================
 with tabs[12]:
     st.header("🎭 Culture System")
-    cities = ["City A", "City B", "City C", "City D"]
+    cities = ["City A","City B","City C","City D"]
     st.bar_chart(dict(zip(cities, np.random.rand(4))))
 
 # =========================================================
-# TAB 13: CIVILIZATION CONSCIOUSNESS
+# TAB 13: CONSCIOUSNESS
 # =========================================================
 with tabs[13]:
-    st.header("🌍 Global Civilization Mind")
+    st.header("🌌 Civilization Consciousness")
     state = np.random.rand(10)
     st.json({
         "stability": float(np.mean(state)),
@@ -317,5 +350,5 @@ with tabs[13]:
 # TAB 14: META-EVOLUTION
 # =========================================================
 with tabs[14]:
-    st.header("Evolution of Evolution")
-    st.info("Meta-learning layer active (conceptual simulation)")
+    st.header("🧬 Meta‑Evolution View")
+    st.info("Meta‑learning layer active (conceptual)")
