@@ -160,7 +160,7 @@ def random_3d_scatter():
 # APP CONFIG
 # =====================================================
 st.set_page_config(page_title="Studio 96", layout="wide")
-st.title("🏗️ Studio 96 — Unified Simulator")
+st.title("Studio 96")
 
 # ---- SIDEBAR PANEL SELECTION ----
 tab_labels = [
@@ -181,7 +181,6 @@ tab_labels = [
     "🧬 Meta‑Evo"
 ]
 
-# Ensure valid active tab
 if st.session_state.active_tab not in tab_labels:
     st.session_state.active_tab = tab_labels[0]
 
@@ -363,7 +362,7 @@ elif active_tab == "🤝 Diplomacy":
     st.header("🤝 Diplomacy Network")
     nations = ["Alpha","Beta","Gamma","Delta","Epsilon"]
     matrix = np.random.rand(len(nations), len(nations))
-    # Fixed: use pandas DataFrame for proper display
+    # FIX: use a DataFrame, NOT st.dataframe(matrix, columns=nations)
     df = pd.DataFrame(matrix, columns=nations, index=nations)
     if MATPLOTLIB_AVAILABLE:
         fig, ax = plt.subplots()
