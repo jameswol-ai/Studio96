@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import pandas as pd          # added for DataFrame display
 import time
 import random
 from collections import defaultdict
@@ -29,19 +30,16 @@ class CityPolicy:
             x, y = random.randint(0, 25), random.randint(0, 25)
             if self.risk_map[(x, y)] <= 2.0:
                 return x, y
-        # if still failing, return random anyways
         return random.randint(0, 25), random.randint(0, 25)
 
     def update(self, failed_nodes):
         for n in failed_nodes:
             x, y, z = n
             self.risk_map[(x, y)] += self.lr
-        # decay all entries
         for k in list(self.risk_map.keys()):
             self.risk_map[k] *= self.decay
             if self.risk_map[k] < 0.01:
                 del self.risk_map[k]
-        # prune if too large
         if len(self.risk_map) > self.max_size:
             sorted_keys = sorted(self.risk_map, key=self.risk_map.get)
             for k in sorted_keys[:len(self.risk_map)-self.max_size]:
@@ -116,7 +114,6 @@ if "site_area" not in st.session_state:
 if "rl_engine" not in st.session_state:
     st.session_state.rl_engine = RLCityEngine()
 if "active_tab" not in st.session_state:
-    # read query param 'tab' to set default, else first tab
     query_params = st.query_params
     st.session_state.active_tab = query_params.get("tab", "AI Brain")
 
@@ -165,7 +162,7 @@ def random_3d_scatter():
 st.set_page_config(page_title="Studio 96", layout="wide")
 st.title("🏗️ Studio 96 — Unified Simulator")
 
-# ---- TAB DEFINITION (radio buttons allow query param control) ----
+# ---- TAB DEFINITION ----
 tab_labels = [
     "🧠 AI Brain",
     "🏛️ Architecture",
@@ -184,14 +181,21 @@ tab_labels = [
     "🧬 Meta‑Evo"
 ]
 
-# Active tab management
-active_tab = st.radio("Navigate", tab_labels, index=tab_labels.index(st.session_state.active_tab) 
-                       if st.session_state.active_tab in tab_labels else 0,
-                       key="tab_radio", horizontal=True)
+# Ensure active tab is valid
+if st.session_state.active_tab not in tab_labels:
+    st.session_state.active_tab = tab_labels[0]
+
+active_tab = st.radio(
+    "Navigate",
+    tab_labels,
+    index=tab_labels.index(st.session_state.active_tab),
+    key="tab_radio",
+    horizontal=True
+)
 st.session_state.active_tab = active_tab
 
 # =========================================================
-# TAB CONTENT RENDERER
+# TAB CONTENT
 # =========================================================
 if active_tab == "🧠 AI Brain":
     st.header("🧠 AI Design Brain")
@@ -210,9 +214,8 @@ if active_tab == "🧠 AI Brain":
             min_value=100.0
         )
         if st.button("Generate Concept", use_container_width=True):
-            # Simulated AI: generates pseudo parameters from intent length
             floors = max(2, len(st.session_state.intent_text) % 20 + 3)
-            grid = random.choice([6,8,10])
+            grid = random.choice([6, 8, 10])
             st.session_state.generated = {
                 "floors": floors,
                 "grid_spacing": grid,
@@ -238,7 +241,7 @@ elif active_tab == "🏛️ Architecture":
             st.info("Matplotlib not installed – showing numerical grid")
             rows = int(grid_extent / grid_spacing)
             grid_data = [[f"({i*grid_spacing:.0f},{j*grid_spacing:.0f})" for j in range(rows)] for i in range(rows)]
-            st.dataframe(grid_data[:10])  # limit display
+            st.dataframe(grid_data[:10])
 
 elif active_tab == "🏗️ Structure":
     st.header("🏗️ Structural Engine")
@@ -330,7 +333,6 @@ elif active_tab == "🏙️ RL City":
         c2.metric("Failures", len(failed))
         c3.metric("Reward", round(reward, 3))
         st.json(buildings)
-    # show current risk heatmap (optional)
     if st.checkbox("Show Risk Map"):
         if rl.policy.risk_map:
             keys = list(rl.policy.risk_map.keys())
@@ -360,6 +362,8 @@ elif active_tab == "🤝 Diplomacy":
     st.header("🤝 Diplomacy Network")
     nations = ["Alpha","Beta","Gamma","Delta","Epsilon"]
     matrix = np.random.rand(len(nations), len(nations))
+    # FIXED: convert to DataFrame for proper column labels
+    df = pd.DataFrame(matrix, columns=nations, index=nations)
     if MATPLOTLIB_AVAILABLE:
         fig, ax = plt.subplots()
         cax = ax.matshow(matrix, cmap="coolwarm")
@@ -370,7 +374,7 @@ elif active_tab == "🤝 Diplomacy":
         ax.set_yticklabels(nations)
         st.pyplot(fig)
     else:
-        st.dataframe(matrix, columns=nations)
+        st.dataframe(df)
 
 elif active_tab == "⚔️ War":
     st.header("⚔️ War System")
@@ -401,4 +405,4 @@ elif active_tab == "🧬 Meta‑Evo":
         st.json({"epoch": random.randint(1,100), "fitness": random.uniform(0.7,1.0)})
 
 # ---- FOOTER ----
-st.caption(f"Active tab: {st.session_state.active_tab}")
+st.caption(f"Active panel: {st.session_state.active_tab}")
