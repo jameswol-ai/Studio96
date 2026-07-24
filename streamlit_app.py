@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-import pandas as pd          # added for DataFrame display
+import pandas as pd
 import time
 import random
 from collections import defaultdict
@@ -16,7 +16,7 @@ except ImportError:
     MATPLOTLIB_AVAILABLE = False
 
 # =====================================================
-# IMPROVED RL CITY ENGINE (with decay & persistence)
+# IMPROVED RL CITY ENGINE
 # =====================================================
 class CityPolicy:
     def __init__(self, lr=0.2, decay=0.99, max_size=1000):
@@ -105,7 +105,7 @@ class RLCityEngine:
         return buildings, nodes, loads, failed, stability, reward
 
 # =====================================================
-# SESSION STATE INITIALIZATION
+# SESSION STATE
 # =====================================================
 if "intent_text" not in st.session_state:
     st.session_state.intent_text = ""
@@ -114,8 +114,8 @@ if "site_area" not in st.session_state:
 if "rl_engine" not in st.session_state:
     st.session_state.rl_engine = RLCityEngine()
 if "active_tab" not in st.session_state:
-    query_params = st.query_params
-    st.session_state.active_tab = query_params.get("tab", "AI Brain")
+    params = st.query_params
+    st.session_state.active_tab = params.get("tab", "AI Brain")
 
 # =====================================================
 # CACHED MATPLOTLIB FIGURES
@@ -162,7 +162,7 @@ def random_3d_scatter():
 st.set_page_config(page_title="Studio 96", layout="wide")
 st.title("🏗️ Studio 96 — Unified Simulator")
 
-# ---- TAB DEFINITION ----
+# ---- SIDEBAR PANEL SELECTION ----
 tab_labels = [
     "🧠 AI Brain",
     "🏛️ Architecture",
@@ -181,21 +181,22 @@ tab_labels = [
     "🧬 Meta‑Evo"
 ]
 
-# Ensure active tab is valid
+# Ensure valid active tab
 if st.session_state.active_tab not in tab_labels:
     st.session_state.active_tab = tab_labels[0]
 
-active_tab = st.radio(
-    "Navigate",
-    tab_labels,
-    index=tab_labels.index(st.session_state.active_tab),
-    key="tab_radio",
-    horizontal=True
-)
+with st.sidebar:
+    st.header("📋 Panels")
+    active_tab = st.radio(
+        "Select panel",
+        tab_labels,
+        index=tab_labels.index(st.session_state.active_tab),
+        key="tab_radio"
+    )
 st.session_state.active_tab = active_tab
 
 # =========================================================
-# TAB CONTENT
+# PANEL CONTENT
 # =========================================================
 if active_tab == "🧠 AI Brain":
     st.header("🧠 AI Design Brain")
@@ -362,7 +363,7 @@ elif active_tab == "🤝 Diplomacy":
     st.header("🤝 Diplomacy Network")
     nations = ["Alpha","Beta","Gamma","Delta","Epsilon"]
     matrix = np.random.rand(len(nations), len(nations))
-    # FIXED: convert to DataFrame for proper column labels
+    # Fixed: use pandas DataFrame for proper display
     df = pd.DataFrame(matrix, columns=nations, index=nations)
     if MATPLOTLIB_AVAILABLE:
         fig, ax = plt.subplots()
@@ -405,4 +406,4 @@ elif active_tab == "🧬 Meta‑Evo":
         st.json({"epoch": random.randint(1,100), "fitness": random.uniform(0.7,1.0)})
 
 # ---- FOOTER ----
-st.caption(f"Active panel: {st.session_state.active_tab}")
+st.sidebar.caption(f"Active panel: {st.session_state.active_tab}")
