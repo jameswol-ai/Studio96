@@ -362,7 +362,6 @@ elif active_tab == "🤝 Diplomacy":
     st.header("🤝 Diplomacy Network")
     nations = ["Alpha","Beta","Gamma","Delta","Epsilon"]
     matrix = np.random.rand(len(nations), len(nations))
-    # FIX: use a DataFrame, NOT st.dataframe(matrix, columns=nations)
     df = pd.DataFrame(matrix, columns=nations, index=nations)
     if MATPLOTLIB_AVAILABLE:
         fig, ax = plt.subplots()
